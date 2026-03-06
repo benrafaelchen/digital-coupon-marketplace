@@ -31,6 +31,18 @@ export interface ProductPublicDTO {
   price: number;
 }
 
+/** Customer storefront listing — like PublicDTO but includes sold status so the
+ *  frontend can show sold coupons as dimmed/disabled. Still excludes pricing
+ *  internals and coupon value. */
+export interface ProductCustomerDTO {
+  id: string;
+  name: string;
+  description: string;
+  image_url: string;
+  price: number;
+  is_sold: boolean;
+}
+
 /** Returned after a successful purchase */
 export interface PurchaseResultDTO {
   product_id: string;

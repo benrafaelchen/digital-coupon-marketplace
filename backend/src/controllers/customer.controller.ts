@@ -4,11 +4,15 @@ import { ProductService } from "../services/product.service";
 /**
  * Customer-facing controller — serves the frontend storefront.
  * Prices are fixed at minimum_sell_price; customers cannot override.
+ *
+ * Unlike the reseller API, the customer list includes sold items (with is_sold
+ * flag) so the frontend can display them as dimmed/disabled. Pricing internals
+ * and coupon values are still never exposed in listings.
  */
 export const CustomerController = {
   async listProducts(_req: Request, res: Response, next: NextFunction) {
     try {
-      const products = await ProductService.listUnsold();
+      const products = await ProductService.listAllForCustomer();
       res.json(products);
     } catch (err) {
       next(err);

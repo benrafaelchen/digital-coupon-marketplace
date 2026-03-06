@@ -35,7 +35,7 @@ To stop everything: `docker compose down` (add `-v` to also wipe the database vo
 ├── backend/
 │   ├── prisma/
 │   │   ├── schema.prisma          # DB schema (single-table Product model)
-│   │   ├── seed.ts                # Seeds 5 sample coupons
+│   │   ├── seed.ts                # Seeds 15 sample coupons (idempotent)
 │   │   └── migrations/            # SQL migration files
 │   ├── src/
 │   │   ├── index.ts               # Express app entry point
@@ -74,6 +74,10 @@ To stop everything: `docker compose down` (add `-v` to also wipe the database vo
 
 ## Architecture & Key Decisions
 
+### Seed Data
+
+The seed script inserts **15 sample coupons** on first run. It is idempotent — on subsequent restarts it only inserts coupons whose name doesn't already exist, so no duplicates are created.
+
 ### Database Schema
 
 Single-table design with a `type` enum discriminator (`COUPON`). This avoids unnecessary JOINs for the current single-type use case while remaining extensible — future product types only need a new enum value and nullable type-specific columns.
@@ -98,6 +102,11 @@ See: `backend/src/repositories/product.repository.ts` → `atomicPurchase()`
 ### Coupon Value Secrecy
 
 The coupon `value` field is **only returned after a successful purchase**. Public listing endpoints never include it.
+
+### Reseller vs Customer Listing Behavior
+
+- **Reseller API** (`GET /api/v1/products`): returns **only unsold** products, per the reseller API spec. This endpoint is unchanged.
+- **Customer API** (`GET /api/customer/products`): returns **all** products including sold ones, with an `is_sold` flag. The customer frontend uses this to display sold coupons as dimmed cards with a red "SOLD" badge and a disabled purchase button. Pricing internals and coupon values are still excluded.
 
 ---
 
@@ -205,12 +214,16 @@ curl -X DELETE http://localhost:3000/api/admin/products/{id}
 ### Customer API (`/api/customer`)
 
 ```bash
-# List available coupons
+# List all coupons (includes sold items with is_sold flag)
 curl http://localhost:3000/api/customer/products
 
 # Purchase (price is fixed server-side, no body needed)
 curl -X POST http://localhost:3000/api/customer/products/{id}/purchase
 ```
+
+> **Note:** The customer list returns all products (including sold ones) so the
+> frontend can display them. The reseller list (`/api/v1/products`) returns only
+> unsold products per the reseller API spec.
 
 ---
 

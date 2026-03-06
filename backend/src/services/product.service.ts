@@ -6,6 +6,7 @@ import {
   CreateProductInput,
   UpdateProductInput,
   ProductPublicDTO,
+  ProductCustomerDTO,
   ProductAdminDTO,
   PurchaseResultDTO,
 } from "../types";
@@ -27,6 +28,26 @@ function toPublicDTO(product: {
     description: product.description,
     image_url: product.imageUrl,
     price: price.toDecimalPlaces(2).toNumber(),
+  };
+}
+
+function toCustomerDTO(product: {
+  id: string;
+  name: string;
+  description: string;
+  imageUrl: string;
+  costPrice: Decimal.Value;
+  marginPercentage: Decimal.Value;
+  isSold: boolean;
+}): ProductCustomerDTO {
+  const price = computeMinimumSellPrice(product.costPrice, product.marginPercentage);
+  return {
+    id: product.id,
+    name: product.name,
+    description: product.description,
+    image_url: product.imageUrl,
+    price: price.toDecimalPlaces(2).toNumber(),
+    is_sold: product.isSold,
   };
 }
 
@@ -57,6 +78,13 @@ export const ProductService = {
   async listUnsold(): Promise<ProductPublicDTO[]> {
     const products = await ProductRepository.findAllUnsold();
     return products.map(toPublicDTO);
+  },
+
+  /** Returns all products with is_sold flag for the customer storefront.
+   *  Pricing internals and coupon value are still excluded. */
+  async listAllForCustomer(): Promise<ProductCustomerDTO[]> {
+    const products = await ProductRepository.findAll();
+    return products.map(toCustomerDTO);
   },
 
   async getPublicById(id: string): Promise<ProductPublicDTO> {

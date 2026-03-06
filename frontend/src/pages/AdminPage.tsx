@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   fetchAdminProducts,
   createAdminProduct,
   deleteAdminProduct,
 } from "../services/api";
 import { ProductAdmin } from "../types";
+import ConfirmDialog from "../components/ConfirmDialog";
+import Toast from "../components/Toast";
 
 const EMPTY_FORM = {
   name: "",
@@ -21,6 +23,8 @@ export default function AdminPage() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [toast, setToast] = useState("");
 
   const load = () => {
     fetchAdminProducts().then(setProducts).catch((e) => setError(e.message));
@@ -49,20 +53,24 @@ export default function AdminPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this product?")) return;
+  const executeDelete = useCallback(async () => {
+    if (!deleteTarget) return;
+    const id = deleteTarget;
+    setDeleteTarget(null);
+
     try {
       await deleteAdminProduct(id);
+      setToast("Coupon deleted successfully.");
       load();
     } catch (e: any) {
       setError(e.message);
     }
-  };
+  }, [deleteTarget]);
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h2>Admin — All Products</h2>
+      <div className="admin-header">
+        <h2>Admin — All Products ({products.length})</h2>
         <button onClick={() => setShowForm(!showForm)}>
           {showForm ? "Cancel" : "+ New Coupon"}
         </button>
@@ -127,39 +135,67 @@ export default function AdminPage() {
         </form>
       )}
 
-      <table className="admin-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Cost</th>
-            <th>Margin %</th>
-            <th>Sell Price</th>
-            <th>Sold</th>
-            <th>Value Type</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {products.map((p) => (
-            <tr key={p.id} className={p.is_sold ? "sold-row" : ""}>
-              <td>{p.name}</td>
-              <td>${p.cost_price.toFixed(2)}</td>
-              <td>{p.margin_percentage}%</td>
-              <td>${p.minimum_sell_price.toFixed(2)}</td>
-              <td>{p.is_sold ? "Yes" : "No"}</td>
-              <td>{p.value_type}</td>
-              <td>
-                <button
-                  onClick={() => handleDelete(p.id)}
-                  className="btn-danger"
-                >
-                  Delete
-                </button>
-              </td>
+      <div className="admin-table-wrap">
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Cost</th>
+              <th>Margin</th>
+              <th>Sell Price</th>
+              <th>Status</th>
+              <th>Type</th>
+              <th>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {products.length === 0 ? (
+              <tr>
+                <td colSpan={7} style={{ textAlign: "center", padding: 24, opacity: 0.6 }}>
+                  No products yet. Click "+ New Coupon" to create one.
+                </td>
+              </tr>
+            ) : (
+              products.map((p) => (
+                <tr key={p.id} className={p.is_sold ? "sold-row" : ""}>
+                  <td>{p.name}</td>
+                  <td>${p.cost_price.toFixed(2)}</td>
+                  <td>{p.margin_percentage}%</td>
+                  <td>${p.minimum_sell_price.toFixed(2)}</td>
+                  <td>
+                    <span className={`status-pill ${p.is_sold ? "status-pill--sold" : "status-pill--available"}`}>
+                      {p.is_sold ? "Sold" : "Available"}
+                    </span>
+                  </td>
+                  <td>{p.value_type}</td>
+                  <td>
+                    <button
+                      onClick={() => setDeleteTarget(p.id)}
+                      className="btn-danger btn-sm"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {deleteTarget && (
+        <ConfirmDialog
+          title="Delete Coupon"
+          message="Are you sure you want to delete this coupon? This cannot be undone."
+          confirmLabel="Yes, Delete"
+          cancelLabel="No"
+          danger
+          onConfirm={executeDelete}
+          onCancel={() => setDeleteTarget(null)}
+        />
+      )}
+
+      {toast && <Toast message={toast} onDismiss={() => setToast("")} />}
     </div>
   );
 }

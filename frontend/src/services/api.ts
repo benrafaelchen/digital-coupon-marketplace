@@ -1,4 +1,4 @@
-import { ProductPublic, ProductAdmin, PurchaseResult } from "../types";
+import { ProductCustomer, ProductAdmin, PurchaseResult } from "../types";
 
 const BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -17,7 +17,7 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
 
 // ─── Customer API ───────────────────────────────────────────
 
-export function fetchCustomerProducts(): Promise<ProductPublic[]> {
+export function fetchCustomerProducts(): Promise<ProductCustomer[]> {
   return request("/api/customer/products");
 }
 

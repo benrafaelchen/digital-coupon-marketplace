@@ -6,6 +6,16 @@ export interface ProductPublic {
   price: number;
 }
 
+/** Customer storefront product — includes sold status for UI display */
+export interface ProductCustomer {
+  id: string;
+  name: string;
+  description: string;
+  image_url: string;
+  price: number;
+  is_sold: boolean;
+}
+
 export interface ProductAdmin {
   id: string;
   name: string;
