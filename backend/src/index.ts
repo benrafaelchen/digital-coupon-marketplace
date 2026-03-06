@@ -11,7 +11,18 @@ const PORT = parseInt(process.env.PORT || "3000", 10);
 app.use(cors());
 app.use(express.json());
 
-// Health check
+app.get("/", (_req, res) =>
+  res.json({
+    service: "Digital Coupon Marketplace API",
+    routes: {
+      health: "/health",
+      reseller_api: "/api/v1/products",
+      admin_api: "/api/admin/products",
+      customer_api: "/api/customer/products",
+    },
+  })
+);
+
 app.get("/health", (_req, res) => res.json({ status: "ok" }));
 
 // Route groups

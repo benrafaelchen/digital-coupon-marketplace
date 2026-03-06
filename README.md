@@ -25,6 +25,8 @@ Wait ~30 seconds for MySQL to initialize, migrations to run, and seed data to lo
 | phpMyAdmin   | http://localhost:8080        |
 | Health Check | http://localhost:3000/health |
 
+The backend is a JSON API service — there is no web homepage. `GET /` returns a small JSON index of available routes, and `/health` is the primary sanity check.
+
 To stop everything: `docker compose down` (add `-v` to also wipe the database volume).
 
 ---
