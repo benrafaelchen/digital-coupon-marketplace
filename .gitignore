@@ -1,0 +1,15 @@
+# Secrets — never commit .env files (except the placeholder example)
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# OS / editor
+.DS_Store
+*.log

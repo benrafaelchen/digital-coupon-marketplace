@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// Single-table design with a `type` discriminator. Keeps queries simple and avoids
+// JOINs for the current single-type (COUPON) use case, while remaining extensible
+// — future product types only need new enum values and nullable type-specific columns.
+model Product {
+  id          String   @id @default(uuid()) @db.VarChar(36)
+  name        String   @db.VarChar(255)
+  description String   @db.Text
+  type        ProductType @default(COUPON)
+  imageUrl    String   @map("image_url") @db.VarChar(2048)
+
+  // Pricing — server-only, never exposed to reseller/customer APIs
+  costPrice        Decimal @map("cost_price") @db.Decimal(10, 2)
+  marginPercentage Decimal @map("margin_percentage") @db.Decimal(10, 2)
+
+  isSold Boolean @default(false) @map("is_sold")
+
+  // Coupon-specific payload, revealed only after purchase
+  valueType CouponValueType @default(STRING) @map("value_type")
+  value     String          @db.Text @map("value")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("products")
+}
+
+enum ProductType {
+  COUPON
+}
+
+enum CouponValueType {
+  STRING
+  IMAGE
+}
