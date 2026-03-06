@@ -395,12 +395,12 @@ button:disabled {
 }
 
 .modal-btn--confirm {
-  background: #0f3460;
+  background: #27ae60;
   color: #fff;
 }
 
 .modal-btn--confirm:hover {
-  background: #16213e;
+  background: #1e8449;
 }
 
 .modal-btn--danger {

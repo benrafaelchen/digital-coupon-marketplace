@@ -12,6 +12,9 @@ import {
 } from "../types";
 
 // ─── DTO mappers ────────────────────────────────────────────────
+// Public/customer DTOs deliberately omit cost_price, margin_percentage, and
+// coupon value. Pricing is derived server-side only; coupon value is revealed
+// exclusively after a successful purchase.
 
 function toPublicDTO(product: {
   id: string;
@@ -75,13 +78,13 @@ function toAdminDTO(product: any): ProductAdminDTO {
 export const ProductService = {
   // ── Public / Reseller ──────────────────────────────────────
 
+  // Reseller listing: unsold only, no is_sold flag (per reseller API spec)
   async listUnsold(): Promise<ProductPublicDTO[]> {
     const products = await ProductRepository.findAllUnsold();
     return products.map(toPublicDTO);
   },
 
-  /** Returns all products with is_sold flag for the customer storefront.
-   *  Pricing internals and coupon value are still excluded. */
+  // Customer listing: includes sold items so the storefront can show them dimmed
   async listAllForCustomer(): Promise<ProductCustomerDTO[]> {
     const products = await ProductRepository.findAll();
     return products.map(toCustomerDTO);
@@ -101,11 +104,12 @@ export const ProductService = {
     productId: string,
     resellerPrice: number
   ): Promise<PurchaseResultDTO> {
-    // Pre-check existence and pricing before acquiring the lock
+    // Pre-check before acquiring the expensive row lock
     const product = await ProductRepository.findById(productId);
     if (!product) throw Errors.productNotFound();
     if (product.isSold) throw Errors.productAlreadySold();
 
+    // Price floor enforced server-side: cost_price * (1 + margin/100)
     const minPrice = computeMinimumSellPrice(product.costPrice, product.marginPercentage);
     if (new Decimal(resellerPrice).lessThan(minPrice)) {
       throw Errors.resellerPriceTooLow(minPrice.toDecimalPlaces(2).toNumber());

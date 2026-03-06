@@ -42,8 +42,11 @@ export const ProductRepository = {
    * or null if the product doesn't exist or is already sold.
    */
   async atomicPurchase(productId: string) {
+    // Wrapping in a SERIALIZABLE transaction with FOR UPDATE guarantees that
+    // concurrent purchase attempts on the same row are serialized: exactly one
+    // wins and the other gets ALREADY_SOLD, preventing double-sell.
     return prisma.$transaction(async (tx) => {
-      // Raw query for row-level lock — Prisma doesn't expose FOR UPDATE
+      // Raw query required because Prisma's fluent API doesn't support FOR UPDATE
       const rows = await tx.$queryRaw<
         Array<{
           id: string;
