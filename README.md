@@ -5,7 +5,7 @@
 > - All sensitive values live in `.env` which is git-ignored.
 > - Copy `.env.example` to `.env` and fill in your own values before running.
 
-A full-stack coupon marketplace with a **Reseller REST API**, **Admin CRUD**, and a **Customer storefront**. Built with Node.js, Express, TypeScript, Prisma, MySQL, and React.
+A dockerized full-stack coupon marketplace with a **Reseller REST API**, **Admin CRUD**, and a **Customer storefront**. Built with **Node.js**, **Express**, **TypeScript**, **Prisma**, **MySQL**, **React**, **REST APIs**, and **Docker Compose**.
 
 ---
 
